@@ -1,86 +1,60 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
-using WindowsInput;
 using static LostTools.Settings;
 
 namespace LostTools
 {
     class Program
     {
-
-        [DllImport("user32.dll")]
-        static extern IntPtr GetForegroundWindow();
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr GetDesktopWindow();
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr GetWindowDC(IntPtr window);
-        [DllImport("gdi32.dll", SetLastError = true)]
-        public static extern uint GetPixel(IntPtr dc, int x, int y);
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern int ReleaseDC(IntPtr window, IntPtr dc);
-        [DllImport("user32.dll")]
-        static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
-
-        private static readonly KeyboardSimulator _key = new KeyboardSimulator(new InputSimulator());
-        const uint WM_KEYDOWN = 0x0100;
-
         static void Main(string[] args)
         {
             Console.Title = $"Press any key to quit...";
-            Console.SetWindowSize(40, 4);
-            Console.SetBufferSize(40, 4);
+            Console.SetWindowSize(60, 6);
+            Console.SetBufferSize(60, 6);
             // TODO: Read from file
             var settings = new Settings();
             var target = Process.GetProcessesByName(settings.ProcessName).FirstOrDefault();
             if (target == null)
             {
-                Console.WriteLine($"{settings.ProcessName} is not running.");
+                Log($"{settings.ProcessName} is not running.");
                 Console.ReadKey();
                 return;
             }
 
-            Console.WriteLine($"Waiting for game window to be focused...");
+            Log($"Waiting for game window to be focused...");
 
             var startedPotting = false;
 
             while (!Console.KeyAvailable)
             {
-                Thread.Sleep(settings.CheckIntervalMs);
-                var activeHandle = GetForegroundWindow();
+                // Clamp the min interval
+                Thread.Sleep(settings.CheckIntervalMs < 500 ? 500 : settings.CheckIntervalMs);
+                var activeHandle = WinApi.GetForegroundWindow();
                 //Ignore other windows to avoid spam/lock
                 if (activeHandle != target.MainWindowHandle) continue;
 
                 var lifeBarX = GetLifeBarX(settings.LifeBar, startedPotting);
-                var hpBarCol = GetColorAt(lifeBarX, settings.LifeBar.Y);
+                var hpBarCol = WinApi.GetColorAt(lifeBarX, settings.LifeBar.Y);
                 //Console.WriteLine(lifeBarX);
                 //Console.WriteLine(settings.LifeBar.Y);
                 //Console.WriteLine(hpBarCol.ToString());
 
                 if (IsLowHealth(hpBarCol))
                 {
-                    Console.WriteLine("POTTING!!!");
+                    Log("POTTING!!!");
                     startedPotting = true;
-                    PostMessage(target.MainWindowHandle, WM_KEYDOWN, settings.PotsKey, 0);
+                    WinApi.SendKeyDown(target.MainWindowHandle, settings.PotsKey);
                 }
                 else
                 {
-                    Console.WriteLine("Life is good...");
+                    Log("Life is good...");
                     startedPotting = false;
                 }
             }
-        }
-
-        private static Color GetColorAt(int x, int y)
-        {
-            IntPtr desk = GetDesktopWindow();
-            IntPtr dc = GetWindowDC(desk);
-            int a = (int)GetPixel(dc, x, y);
-            ReleaseDC(desk, dc);
-            return Color.FromArgb(255, (a >> 0) & 0xff, (a >> 8) & 0xff, (a >> 16) & 0xff);
         }
 
         private static int GetLifeBarX(LifeBarSetting setting, bool started)
@@ -99,5 +73,20 @@ namespace LostTools
             && colour.G <= 10 && colour.G > 1
             && colour.B <= 10 && colour.B > 1
         ;
+
+        private static void Log(string message)
+        {
+            var timestamp = DateTime.Now.ToString("[yyyy-MM-dd HH:mm:ss.fff]");
+            var logMessage = $"{timestamp} {message}";
+            Console.WriteLine(logMessage);
+#if DEBUG
+            Directory.CreateDirectory("logs");
+            var logRoll = Path.Combine("logs", $"log_{DateTime.Now.ToString("yyyy-MM-dd")}.txt");
+            using (var stream = File.AppendText(logRoll))
+            {
+                stream.WriteLine(logMessage);
+            }
+#endif
+        }
     }
 }
