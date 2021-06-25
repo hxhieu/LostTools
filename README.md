@@ -1,6 +1,6 @@
 # Download
 
-[https://github.com/hxhieu/LostTools/releases](https://github.com/hxhieu/LostTools/releases)
+[https://github.com/hxhieu/LostTools/releases](https://github.com/hxhieu/LostTools/releases/latest)
 
 # Usage
 
