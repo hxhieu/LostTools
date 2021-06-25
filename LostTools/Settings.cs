@@ -6,10 +6,10 @@ namespace LostTools
     {
         internal class LifeBarSetting
         {
-            public int StartX { get; set; } = 840;
-            public int EndX { get; set; } = 1140;
-            public int Y { get; set; } = 1280;
-            public float CheckPct { get; set; } = 0.6f;
+            public int StartX { get; set; } = 796;
+            public int EndX { get; set; } = 1122;
+            public int Y { get; set; } = 1265;
+            public float CheckPct { get; set; } = 0.7f;
             public bool UntilFull { get; set; } = true;
         }
 

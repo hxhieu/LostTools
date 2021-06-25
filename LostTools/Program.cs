@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -13,10 +14,16 @@ namespace LostTools
         static void Main(string[] args)
         {
             Console.Title = $"Press any key to quit...";
-            Console.SetWindowSize(60, 6);
-            Console.SetBufferSize(60, 6);
-            // TODO: Read from file
-            var settings = new Settings();
+            WinApi.SetAlwaysOnTop(
+                Process.GetCurrentProcess().MainWindowHandle,
+                0,
+                0,
+                800,
+                150
+            );
+
+            var settings = GetSettings();
+
             var target = Process.GetProcessesByName(settings.ProcessName).FirstOrDefault();
             if (target == null)
             {
@@ -33,15 +40,16 @@ namespace LostTools
             {
                 // Clamp the min interval
                 Thread.Sleep(settings.CheckIntervalMs < 500 ? 500 : settings.CheckIntervalMs);
-                var activeHandle = WinApi.GetForegroundWindow();
+                var activeHandle = WinApi.GetCurrentWindow();
                 //Ignore other windows to avoid spam/lock
                 if (activeHandle != target.MainWindowHandle) continue;
 
                 var lifeBarX = GetLifeBarX(settings.LifeBar, startedPotting);
                 var hpBarCol = WinApi.GetColorAt(lifeBarX, settings.LifeBar.Y);
-                //Console.WriteLine(lifeBarX);
-                //Console.WriteLine(settings.LifeBar.Y);
-                //Console.WriteLine(hpBarCol.ToString());
+
+#if DEBUG
+                Log($"lifeBar: X: {lifeBarX}, Y: {settings.LifeBar.Y}, {hpBarCol}");
+#endif
 
                 if (IsLowHealth(hpBarCol))
                 {
@@ -81,12 +89,33 @@ namespace LostTools
             Console.WriteLine(logMessage);
 #if DEBUG
             Directory.CreateDirectory("logs");
-            var logRoll = Path.Combine("logs", $"log_{DateTime.Now.ToString("yyyy-MM-dd")}.txt");
+            var logRoll = Path.Combine("logs", $"log_{DateTime.Now:yyyy-MM-dd}.txt");
             using (var stream = File.AppendText(logRoll))
             {
                 stream.WriteLine(logMessage);
             }
 #endif
+        }
+
+        private static Settings GetSettings()
+        {
+            var settingFile = "settings.json";
+            var settings = new Settings();
+            if (File.Exists(settingFile))
+            {
+                try
+                {
+                    settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(settingFile));
+                }
+                catch (Exception ex)
+                {
+                    Log(ex.Message);
+                    Log("Error loading settings file, all settings reset.");
+                }
+            }
+
+            File.WriteAllText(settingFile, JsonConvert.SerializeObject(settings, Formatting.Indented));
+            return settings;
         }
     }
 }

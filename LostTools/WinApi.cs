@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Runtime.InteropServices;
 
@@ -7,19 +8,22 @@ namespace LostTools
     internal static class WinApi
     {
         const uint WM_KEYDOWN = 0x0100;
+        const int HWND_TOPMOST = -1;
 
         [DllImport("user32.dll")]
-        public static extern IntPtr GetForegroundWindow();
+        private static extern IntPtr GetForegroundWindow();
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr GetDesktopWindow();
+        private static extern IntPtr GetDesktopWindow();
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern IntPtr GetWindowDC(IntPtr window);
+        private static extern IntPtr GetWindowDC(IntPtr window);
         [DllImport("gdi32.dll", SetLastError = true)]
-        public static extern uint GetPixel(IntPtr dc, int x, int y);
+        private static extern uint GetPixel(IntPtr dc, int x, int y);
         [DllImport("user32.dll", SetLastError = true)]
-        public static extern int ReleaseDC(IntPtr window, IntPtr dc);
+        private static extern int ReleaseDC(IntPtr window, IntPtr dc);
         [DllImport("user32.dll")]
-        public static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
+        private static extern bool PostMessage(IntPtr hWnd, uint Msg, int wParam, int lParam);
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, int uFlags);
 
         public static Color GetColorAt(int x, int y)
         {
@@ -34,5 +38,12 @@ namespace LostTools
         {
             PostMessage(handle, WM_KEYDOWN, key, 0);
         }
+
+        public static void SetAlwaysOnTop(IntPtr handle, int x, int y, int width, int height)
+        {
+            SetWindowPos(handle, new IntPtr(HWND_TOPMOST), x, y, width, height, 0);
+        }
+
+        public static IntPtr GetCurrentWindow() => GetForegroundWindow();
     }
 }
