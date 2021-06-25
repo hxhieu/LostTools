@@ -18,6 +18,4 @@
 
 - `PotsKey` is default to `F1`, difference key codes can be found [virtual-key-codes](https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes). They are HEX so use Google to convert for example `70 hex to decimal` => 112
 
-- Run the tool as **Administrators** and you should be set
-
-  
+- Run the tool as **Administrators** and you should be set ![main](./docs/MainConsole.png)
