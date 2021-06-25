@@ -18,7 +18,7 @@ namespace LostTools
                 Process.GetCurrentProcess().MainWindowHandle,
                 0,
                 0,
-                800,
+                580,
                 150
             );
 

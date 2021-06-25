@@ -1,6 +1,4 @@
-﻿using WindowsInput.Native;
-
-namespace LostTools
+﻿namespace LostTools
 {
     internal class Settings
     {
@@ -16,6 +14,6 @@ namespace LostTools
         public string ProcessName { get; set; } = "LOSTARK";
         public int CheckIntervalMs { get; set; } = 1000;
         public LifeBarSetting LifeBar { get; set; } = new LifeBarSetting();
-        public int PotsKey { get; set; } = (int)VirtualKeyCode.F1;
+        public int PotsKey { get; set; } = 112;
     }
 }
