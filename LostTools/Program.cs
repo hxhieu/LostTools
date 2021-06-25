@@ -1,10 +1,10 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using ZeroDep;
 using static LostTools.Settings;
 
 namespace LostTools
@@ -105,7 +105,7 @@ namespace LostTools
             {
                 try
                 {
-                    settings = JsonConvert.DeserializeObject<Settings>(File.ReadAllText(settingFile));
+                    settings = Json.Deserialize<Settings>(File.ReadAllText(settingFile));
                 }
                 catch (Exception ex)
                 {
@@ -114,7 +114,7 @@ namespace LostTools
                 }
             }
 
-            File.WriteAllText(settingFile, JsonConvert.SerializeObject(settings, Formatting.Indented));
+            File.WriteAllText(settingFile, Json.Serialize(settings));
             return settings;
         }
     }
